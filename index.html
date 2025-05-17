@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>قیمت ارز دیجیتال - Nobitex</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>💹 قیمت لحظه‌ای ارزهای دیجیتال</h1>
+<input type="text" id="search" placeholder="🔍 جستجوی ارز...">
+
+<table>
+  <thead>
+    <tr>
+      <th>رمز ارز</th>
+      <th>قیمت به تومان</th>
+      <th>قیمت به تتر</th>
+    </tr>
+  </thead>
+  <tbody id="priceTable"></tbody>
+</table>
+
+<script>
+let lastPrices = {};
+
+function updatePrices() {
+  fetch('api.php')
+    .then(res => res.json())
+    .then(data => {
+      const table = document.getElementById('priceTable');
+      table.innerHTML = '';
+
+      const searchValue = document.getElementById('search').value.toLowerCase();
+
+      for (const [symbol, info] of Object.entries(data)) {
+        if (!symbol.includes(searchValue)) continue;
+
+        const old = lastPrices[symbol] || {};
+        const tr = document.createElement('tr');
+        tr.id = symbol;
+
+        const tdSymbol = document.createElement('td');
+        tdSymbol.textContent = symbol.toUpperCase();
+
+        const tdToman = document.createElement('td');
+        tdToman.textContent = info.PriceToman.toLocaleString();
+        tdToman.className = (info.PriceToman > old.PriceToman) ? 'price-up' :
+                            (info.PriceToman < old.PriceToman) ? 'price-down' : '';
+
+        const tdUsdt = document.createElement('td');
+        tdUsdt.textContent = info.PriceUsdt;
+        tdUsdt.className = (info.PriceUsdt > old.PriceUsdt) ? 'price-up' :
+                           (info.PriceUsdt < old.PriceUsdt) ? 'price-down' : '';
+
+        tr.appendChild(tdSymbol);
+        tr.appendChild(tdToman);
+        tr.appendChild(tdUsdt);
+
+        table.appendChild(tr);
+
+        lastPrices[symbol] = info;
+      }
+    });
+}
+
+document.getElementById('search').addEventListener('input', updatePrices);
+
+updatePrices();
+setInterval(updatePrices, 5000);
+</script>
+
+</body>
+</html>
